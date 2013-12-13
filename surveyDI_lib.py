@@ -24,7 +24,7 @@ def read_csv2dict(input_file):
     :input: input_file - csv input file
     :return: the csv reader object
     """
-    
+   
     logger.info("Reading input file {}".format(input_file))
     with open(input_file) as csv_file:
         reader = csv.DictReader(csv_file)
@@ -44,7 +44,7 @@ def write_to_csv(output_file, headers, values_list, delim='\t'):
             w_info = get_webinar_info(INPUT_FILE)
             write_to_csv(OUTPUT_WEBINARS, w_info[0], [w_info[1]])
     """
-
+    
     logger.info("\tWriting file {}...".format(output_file))
     with open(output_file, 'wb') as csv_file:
         writer = csv.writer(csv_file, delimiter=delim)
@@ -75,7 +75,7 @@ class Question():
         self.text = text
         self.fileid = []
 
-    def set_fieldid(self, fileid):
+    def add_fieldid(self, fileid):
         self.fileid.append(fileid)
 
 
@@ -88,48 +88,46 @@ class Parser():
         #questions
         self.questions = []
         self.qheader = ["QuestionID", "QuestionText"]
+        #surveyquestions
+        self.sqheader = ["SurveyID", "QuestionID"]
 
     def get_surveys(self):
-        survey_list = get_csv_files(self.input_dir)
-        self.surveys = [InputFile(id+1, name) for id, name in enumerate(survey_list)]
+        if not self.surveys:
+            survey_list = get_csv_files(self.input_dir)
+            self.surveys = [InputFile(id+1, name) for id, name in enumerate(survey_list)]
         
     def get_questions(self):
-        """
-        Get info for the "Questions.tab" output file
-        
-        :input: input_files - list of InputFile instances
-                output_file - the name of the file containing the questions
-        :output: 
-        """
-        questions_list = []
-        if not self.surveys:
-            self.get_surveys()
-        for input_file in self.surveys:
+        if not self.questions:
+            questions_list = []
             questions_delim = "Custom Data"
-            try:
-                with open(input_file.name, 'rb') as csv_file:
-                    file_id = input_file.get_id()
-                    reader = csv.reader(csv_file)
-                    headers = reader.next()
-                    qstart_idx = headers.index(questions_delim) + 1
-                    questions_list.extend([x for x in headers[qstart_idx:] 
-                                      if x not in questions_list])
-            except IOError as e:
-                logger.error("Cannot read file '{}'".format(input_file))
-                logger.debug("Exception:\n{}".format(e))
-        self.questions = [Question(id+1, text, file_id) 
-                          for id, text in enumerate(questions_list)]
+            self.get_surveys()
+            for input_file in self.surveys:
+                try:
+                    with open(input_file.name, 'rb') as csv_file:
+                        fileid = input_file.get_id()
+                        reader = csv.reader(csv_file)
+                        headers = reader.next()
+                        qstart_idx = headers.index(questions_delim) + 1
+                        questions_list.extend([(text, fileid) for text in headers[qstart_idx:] 
+                                               if text not in questions_list])
+                except IOError as e:
+                    logger.error("Cannot read file '{}'".format(input_file))
+                    logger.debug("Exception:\n{}".format(e))
+            # info is a tuple: (question_text, file_id)
+            self.questions = [Question(id+1, info[0], info[1]) 
+                              for id, info in enumerate(questions_list)]
 
     def write_surveys(self, output_file):
-        if not self.surveys:
-            self.get_surveys()
+        self.get_surveys()
         survey_list = [(survey.id, survey.get_filename()) for survey in self.surveys]
         write_to_csv(output_file, self.fheader, survey_list)
     
     def write_questions(self, output_file):
-        if not self.questions:
-            self.get_questions()
+        self.get_questions()
         questions_list = [(question.id, question.text) for question in self.questions]
         write_to_csv(output_file, self.qheader, questions_list)
     
-
+    def write_surveysquestions(self, output_file):
+        self.get_questions()
+        sq_list = [(question.fileid, question.id) for question in self.questions]
+        write_to_csv(output_file, self.sqheader, sq_list)
