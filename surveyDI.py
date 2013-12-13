@@ -26,13 +26,13 @@ def main():
     global args
 
     parse_cli_opts()
-    output_file = 'Surveys.tab'
+ 
     file_parser = surveyDI_lib.Parser(args.input_dir)
+    output_file = 'Surveys.tab'
     file_parser.write_surveys(output_file)
+    output_file = 'Questions.tab'
+    file_parser.write_questions(output_file)
 
-#    surveyDI_lib.get_surveys(args.input_dir, output_file)
-#    output_file = 'Questions.tab'
-#    surveyDI_lib.get_questions(args.input_dir, output_file)
 
 if __name__ == "__main__":
     log_delimiter = "#"*20 + strftime("%a, %d %b %Y %X +0000", gmtime()) + "#"*10

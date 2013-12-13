@@ -84,8 +84,7 @@ class Parser():
         self.input_dir = input_dir
         #surveys
         self.surveys = []
-        self.fheader = ["SurveyID", "Filename"] 
-        
+        self.fheader = ["SurveyID", "Filename"]      
         #questions
         self.questions = []
         self.qheader = ["QuestionID", "QuestionText"]
@@ -102,9 +101,10 @@ class Parser():
                 output_file - the name of the file containing the questions
         :output: 
         """
-        if not self.input_files:
-            get_inputfiles()
-        for input_file in self.input_files:
+        questions_list = []
+        if not self.surveys:
+            self.get_surveys()
+        for input_file in self.surveys:
             questions_delim = "Custom Data"
             try:
                 with open(input_file.name, 'rb') as csv_file:
@@ -117,7 +117,8 @@ class Parser():
             except IOError as e:
                 logger.error("Cannot read file '{}'".format(input_file))
                 logger.debug("Exception:\n{}".format(e))
-        self.questions = [Question(id, text, file_id) for id, text in enumerate(questions_list)]
+        self.questions = [Question(id+1, text, file_id) 
+                          for id, text in enumerate(questions_list)]
 
     def write_surveys(self, output_file):
         if not self.surveys:
@@ -125,8 +126,10 @@ class Parser():
         survey_list = [(survey.id, survey.get_filename()) for survey in self.surveys]
         write_to_csv(output_file, self.fheader, survey_list)
     
-    def write_questions(self):
+    def write_questions(self, output_file):
+        if not self.questions:
+            self.get_questions()
         questions_list = [(question.id, question.text) for question in self.questions]
-        write_to_csv(output_file, header, questions_list)
+        write_to_csv(output_file, self.qheader, questions_list)
     
 
