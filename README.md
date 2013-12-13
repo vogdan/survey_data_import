@@ -4,6 +4,18 @@ survey_data_import
 Program to convert the CSV files in the input\ directory to a format that can be easily be imported into a database.
 
 
+Usage:
+
+    surveyDI.py [-h] -i INPUT_DIR [-o OUTPUT_DIR]
+    
+    optional arguments:
+      -h, --help        Show this help message and exit
+      -i INPUT_DIR, --input_dir INPUT_DIR
+                        Directory containing input csv files
+      -o OUTPUT_DIR, --output_dir OUTPUT_DIR (NOT IMPLEMENTED YET)
+                        Directory that will contain output files
+
+
 Objective:
 - Write a python program to convert the files in the input\ directory to a format that can be easily be imported into a database  (see: the files in output\ directory)
 - the files in the output directory are mostly complete for the given input files except QuestionResponses.tab only has responses for the first 2 respondents for one of the surveys
