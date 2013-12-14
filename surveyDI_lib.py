@@ -64,7 +64,7 @@ class InputFile():
 
     def get_filename(self):
         return os.path.basename(self.name)
-
+    
     def __str__(self):
         print "{} {}".format(self.id, self.name)
 
@@ -73,7 +73,7 @@ class Question():
     def __init__(self, id, text, fileid):
         self.id = id
         self.text = text
-        self.fileid = []
+        self.fileid = [fileid]
 
     def add_fieldid(self, fileid):
         self.fileid.append(fileid)
@@ -91,14 +91,22 @@ class Parser():
         #surveyquestions
         self.sqheader = ["SurveyID", "QuestionID"]
 
+    def get_question(self, text):
+        for q in self.questions:
+            if q.text == text:
+                return q
+        return None
+
     def get_surveys(self):
         if not self.surveys:
             survey_list = get_csv_files(self.input_dir)
             self.surveys = [InputFile(id+1, name) for id, name in enumerate(survey_list)]
+            logger.info("\tSurveys found: {}".format(len(self.surveys)))
         
     def get_questions(self):
         if not self.questions:
             questions_list = []
+            all_questions_list = []
             questions_delim = "Custom Data"
             self.get_surveys()
             for input_file in self.surveys:
@@ -108,15 +116,34 @@ class Parser():
                         reader = csv.reader(csv_file)
                         headers = reader.next()
                         qstart_idx = headers.index(questions_delim) + 1
-                        questions_list.extend([(text, fileid) for text in headers[qstart_idx:] 
-                                               if text not in questions_list])
+                        questions_list.extend([text for text in headers[qstart_idx:]
+                                              if text not in questions_list])
+                        all_questions_list.extend([(text, fileid) 
+                                                   for text in headers[qstart_idx:]])
                 except IOError as e:
                     logger.error("Cannot read file '{}'".format(input_file))
                     logger.debug("Exception:\n{}".format(e))
-            # info is a tuple: (question_text, file_id)
-            self.questions = [Question(id+1, info[0], info[1]) 
-                              for id, info in enumerate(questions_list)]
+            logger.info("unq questions {}".format(len(questions_list)))
+            logger.info("all questions {}".format(len(all_questions_list)))
 
+            # info is a tuple: (question_text, file_id)
+            # !!! Question 49 must be in both
+            for id, text in enumerate(questions_list):
+                q = self.get_question(text)
+                if q:
+                    for info in all_questions_list:
+                        if info[0] == text:
+                            all_questions_list.remove(info)
+                            q.add_fieldid(info[1])
+                else:
+                    for info in all_questions_list:
+                        if info[0] == text:
+                            all_questions_list.remove(info)
+                            self.questions.append(Question(id+1, text, info[1]))
+                            
+            logger.info("\tDistinct questions found: {}".format(len(self.questions)))
+                        
+                              
     def write_surveys(self, output_file):
         self.get_surveys()
         survey_list = [(survey.id, survey.get_filename()) for survey in self.surveys]
