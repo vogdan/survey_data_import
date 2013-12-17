@@ -15,6 +15,9 @@ Usage:
       -o OUTPUT_DIR, --output_dir OUTPUT_DIR 
                         Directory that will contain output files. Will be
                         created if doesn't exist.
+      -d, --write_to_db Write information to database also.
+      -D, --only_to_db  Only write to database.
+
 
 
 Objective:
