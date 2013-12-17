@@ -101,10 +101,6 @@ class Question():
     def __str__(self):
         return "{} {} {}".format(self.id, self.fileid, self.text)
 
-class Respondent():
-    def __init__(self, details, fileid):
-        self.details = details
-        self.fileid = [fileid]
 
 class Parser():
     def __init__(self, input_dir):
@@ -121,7 +117,8 @@ class Parser():
         self.respondents = []
         self.rheader = ["SurveyID", "RespondentID", "CollectorID", "StartDate", "EndDate IP Address", "Email Address", "First Name", "LastName", "Custom Data"]
         #questionresponses
-        self.qrheader = ["QuestionID", "RespondentID", "Response"]
+        self.qresponses = []
+        self.qrheader = ["QuestionID", "RespondentID", "Response"]        
 
     def get_question_by_text(self, text):
         for q in self.questions:
@@ -139,7 +136,6 @@ class Parser():
         if not self.questions:
             all_questions_list = []
             questions_delim = "Custom Data"
-            respondents_list = []
             self.get_surveys()
             for input_file in self.surveys:
                 try:
@@ -183,12 +179,20 @@ class Parser():
                         reader = csv.reader(csv_file)
                         headers = reader.next()
                         qstart_idx = headers.index(questions_delim) + 1
-                        # process respondents
+                        questions = headers[qstart_idx:]
                         for row in reader:
+                            # process respondents
                             user_details = row[:qstart_idx]
                             user_details.insert(0, fileid)
                             self.respondents.append(user_details)
-                except exception:
+                            # process responses
+                            user_responses = row[qstart_idx:]
+                            user_id = user_details[1]
+                            for qtext, response in zip(questions, user_responses):
+                                q = self.get_question_by_text(qtext)
+                                self.qresponses.append((q.id, user_id, response))
+                            
+                except:
                     write_exception("While reading file '{}'".format(input_file))
             logger.info("Respondents found: {}".format(len(self.respondents)))
 
@@ -215,3 +219,7 @@ class Parser():
     def write_respondents(self, output_file):
         self.get_respondents()
         write_to_csv(output_file, self.rheader, self.respondents)
+
+    def write_responses(self, output_file):
+        self.get_respondents()
+        write_to_csv(output_file, self.qrheader, self.qresponses)

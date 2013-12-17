@@ -36,6 +36,8 @@ def main():
     file_parser.write_surveysquestions(output_file)
     output_file = 'Respondents.tab'
     file_parser.write_respondents(output_file)
+    output_file = 'QuestionResponses.tab'
+    file_parser.write_responses(output_file)
 
 if __name__ == "__main__":
     log_delimiter = "#"*20 + strftime("%a, %d %b %Y %X +0000", gmtime()) + "#"*10
