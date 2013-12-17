@@ -17,9 +17,17 @@ directory to a format that can be easily be imported into a database''')
                         help='Directory containing input csv files', 
                         required=True)
     arg_parser.add_argument('-o', '--output_dir', 
-                        help='Directory that will contain output files', 
-                        default=".")
+                        help='Directory that will contain output files. Will be create if doesn\'t exist')
     args = arg_parser.parse_args()
+
+
+def make_output_path(output_file_name):
+    if args.output_dir:
+        if not os.path.exists(args.output_dir):
+            os.makedirs(args.output_dir)
+        return os.path.join(args.output_dir, output_file_name)
+    else:
+        return output_file_name
 
 
 def main():
@@ -28,16 +36,17 @@ def main():
     parse_cli_opts()
  
     file_parser = surveyDI_lib.Parser(args.input_dir)
+
     # Surveys.tab
-    file_parser.write_surveys(OPUT_S)
+    file_parser.write_surveys(make_output_path(OPUT_S))
     # Questions.tab
-    file_parser.write_questions(OPUT_Q)
+    file_parser.write_questions(make_output_path(OPUT_Q))
     # SurveysQuestions.tab
-    file_parser.write_surveysquestions(OPUT_SQ)
+    file_parser.write_surveysquestions(make_output_path(OPUT_SQ))
     # Respondents.tab
-    file_parser.write_respondents(OPUT_R)
+    file_parser.write_respondents(make_output_path(OPUT_R))
     # QuestionResponses.tab
-    file_parser.write_responses(OPUT_QR)
+    file_parser.write_responses(make_output_path(OPUT_QR))
 
 if __name__ == "__main__":
     log_delimiter = "#"*20 + strftime("%a, %d %b %Y %X +0000", gmtime()) + "#"*10
