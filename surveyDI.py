@@ -6,7 +6,7 @@ import os
 import surveyDI_lib
 from surveyDI_conf import logger, LOG_FILE_PATH, LOG_FILE
 from surveyDI_conf import OPUT_QR, OPUT_SQ, OPUT_Q, OPUT_R, OPUT_S
-
+import sys
 
 def parse_cli_opts():
     global args
@@ -34,6 +34,8 @@ def main():
     file_parser.write_questions(output_file)
     output_file = 'SurveysQuestions.tab'
     file_parser.write_surveysquestions(output_file)
+    output_file = 'Respondents.tab'
+    file_parser.write_respondents(output_file)
 
 if __name__ == "__main__":
     log_delimiter = "#"*20 + strftime("%a, %d %b %Y %X +0000", gmtime()) + "#"*10

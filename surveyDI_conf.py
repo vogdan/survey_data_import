@@ -22,8 +22,7 @@ OPUT_S = "Surveys.tab"
 #        log.debug(message)
 # 4. Warning (log.warning )and error (log.error) messages 
 #    will be logged to both console and log file.
-
-LOG_FILE = sys.argv[0].split(".")[0] + ".log"
+LOG_FILE = sys.argv[0].strip("./").split(".")[0] + ".log"
 LOG_FILE_PATH = os.getcwd()
 logger = logging.getLogger('webinarImport')
 logger.setLevel(logging.DEBUG)
