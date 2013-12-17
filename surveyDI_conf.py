@@ -2,12 +2,18 @@ import logging
 import sys 
 import os
 
-
+#output files
 OPUT_QR = "QuestionResponses.tab"
 OPUT_SQ = "SurveysQuestions.tab"
 OPUT_Q = "Questions.tab"
 OPUT_R = "Responses.tab"
 OPUT_S = "Surveys.tab"
+
+#database details
+DB_NAME = 'testdb'
+SERVER_NAME = 'localhost'
+USER = 'testuser'
+PASS = 'testx'
 
 #####################################################
 # Logging HOWTO

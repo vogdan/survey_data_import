@@ -3,6 +3,7 @@ from surveyDI_conf import logger
 import os
 from sys import exc_info
 from traceback import format_exception
+from MySQLdb import connect
 
 def get_csv_files(input_dir, suffix=".csv"):
     """
@@ -74,6 +75,45 @@ def write_to_csv(output_file, headers, values_list, delim='\t'):
         write_exception("Trying to write values: {}".format(values))
             
 
+def write_sql_table(cursor, db_name, table_name, headers_list, values_list):
+    """
+    Write info to an SQL table.
+
+    :input: cursor - MySQLdb cursor object as obtained prior to connecting
+                     to the database
+            db_name - name of the database to create the table in
+            table_name - name of table to be created
+            headers_list - table headers
+            values_list - list of lists each containing a table row
+    :return: None
+    :notes: Tables will be dropped and recreated if already exist
+    Column names will be the CSV headers with spaces and round
+    brackets removed.
+    """
+
+    logger.info("\n\tDropping table {}.{}...".format(db_name, table_name))
+    cursor.execute("DROP TABLE IF EXISTS {}.{}".format(db_name, table_name))
+
+    logger.info("\tCreating table {}.{}...".format(db_name, table_name))
+    db_headers = [x.translate(None, '() ') for x in headers_list]
+    create_cmd = "CREATE TABLE {}({})".format(
+        table_name,
+        ", ".join(["`"+str(x)+"`" + " VARCHAR(3000)" for x in db_headers]))
+    cursor.execute(create_cmd)
+
+    logger.info("\tPopulating table {}.{}...".format(db_name, table_name))
+    for row in values_list:
+        insert_cmd = "INSERT INTO {0}({1}) VALUES({2})".format(
+            db_name + "." + table_name,
+            ", ".join(["`"+str(x).replace("`", "\\`")+"`" for x in db_headers]),
+            ", ".join(["'"+str(x).replace("'", "\\'")+"'" for x in row]))
+        try:
+            cursor.execute(insert_cmd)
+        except Exception as e:
+            logger.error("SQL error while executing command:\n\t{}".format(insert_cmd))
+            logger.debug(e)
+
+
 class InputFile():
     def __init__(self, id, name):
         self.id = id
@@ -107,18 +147,24 @@ class Parser():
         self.input_dir = input_dir
         #surveys
         self.surveys = []
-        self.fheader = ["SurveyID", "Filename"]      
+        self.fheader = ["SurveyID", "Filename"]  
+        self.stable = "Surveys"
         #questions
         self.questions = []
         self.qheader = ["QuestionID", "QuestionText"]
+        self.qtable = "Questions"
         #surveyquestions
+        self.squestions = []
         self.sqheader = ["SurveyID", "QuestionID"]
+        self.sqtable = "SurveysQuestions"
         #respondents
         self.respondents = []
         self.rheader = ["SurveyID", "RespondentID", "CollectorID", "StartDate", "EndDate IP Address", "Email Address", "First Name", "LastName", "Custom Data"]
+        self.rtable = "Respondents"
         #questionresponses
         self.qresponses = []
         self.qrheader = ["QuestionID", "RespondentID", "Response"]
+        self.qrtable = "QuestionResponses"
 
     def get_question_by_text(self, text):
         for q in self.questions:
@@ -167,7 +213,13 @@ class Parser():
                             q.add_fieldid(info[1])
             logger.info("Distinct questions found: {} (total {})".format(
                     len(self.questions), total))
-                   
+        
+    def get_surveyquestions(self):
+        self.get_questions()
+        for q in self.questions:
+            for fileid in q.fileid:
+                self.squestions.extend([(fileid, q.id)])
+           
     def get_respondents(self):
         if not self.respondents:
             questions_delim = "Custom Data"
@@ -206,14 +258,10 @@ class Parser():
         write_to_csv(output_file, 
                      self.qheader,
                      [(question.id, question.text) for question in self.questions])
-    
+
     def write_surveysquestions(self, output_file):
-        self.get_questions()
-        print_list = []
-        for q in self.questions:
-            for fileid in q.fileid:
-                print_list.extend([(fileid, q.id)])
-        write_to_csv(output_file, self.sqheader, print_list)
+        self.get_surveyquestions()
+        write_to_csv(output_file, self.sqheader, self.squestions)
 
     def write_respondents(self, output_file):
         self.get_respondents()
@@ -222,3 +270,21 @@ class Parser():
     def write_responses(self, output_file):
         self.get_respondents()
         write_to_csv(output_file, self.qrheader, self.qresponses)
+
+    def write_all_to_mysql(self, server_name, user, passw, db_name):
+        logger.info("Writing do database {}:".format(db_name))
+        conn = connect(server_name, user, passw, db_name)
+        with conn:
+            cur = conn.cursor()
+            # surveys
+            write_sql_table(cur, db_name, self.stable, self.fheader, 
+                            [(s.id, s.name) for s in self.surveys])            
+            # questions
+            write_sql_table(cur, db_name, self.qtable, self.qheader,
+                            [(q.id, q.text) for q in self.questions])
+            # surveyquestions
+            write_sql_table(cur, db_name, self.sqtable, self.sqheader, self.squestions)
+            # respondents
+            write_sql_table(cur, db_name, self.rtable, self.rheader, self.respondents)            
+            # responses
+            write_sql_table(cur, db_name, self.qrtable, self.qrheader, self.qresponses)
