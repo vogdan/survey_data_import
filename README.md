@@ -12,7 +12,7 @@ Usage:
       -h, --help        Show this help message and exit
       -i INPUT_DIR, --input_dir INPUT_DIR
                         Directory containing input csv files
-      -o OUTPUT_DIR, --output_dir OUTPUT_DIR (NOT IMPLEMENTED YET)
+      -o OUTPUT_DIR, --output_dir OUTPUT_DIR 
                         Directory that will contain output files. Will be
                         created if doesn't exist.
 
