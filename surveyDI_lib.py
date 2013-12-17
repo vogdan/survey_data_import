@@ -118,19 +118,20 @@ class Parser():
         self.rheader = ["SurveyID", "RespondentID", "CollectorID", "StartDate", "EndDate IP Address", "Email Address", "First Name", "LastName", "Custom Data"]
         #questionresponses
         self.qresponses = []
-        self.qrheader = ["QuestionID", "RespondentID", "Response"]        
+        self.qrheader = ["QuestionID", "RespondentID", "Response"]
 
     def get_question_by_text(self, text):
         for q in self.questions:
             if q.text == text:
                 return q
-        return None
 
     def get_surveys(self):
         if not self.surveys:
             survey_list = get_csv_files(self.input_dir)
             self.surveys = [InputFile(id+1, name) for id, name in enumerate(survey_list)]
             logger.info("Surveys found: {}".format(len(self.surveys)))
+            for survey in self.surveys:
+                logger.info("\t--> {}.{}".format(survey.id, survey.name))
         
     def get_questions(self):
         if not self.questions:
@@ -148,8 +149,7 @@ class Parser():
                         all_questions_list.extend([(text, fileid) 
                                                    for text in headers[qstart_idx:]])
                 except IOError as e:
-                    write_exception("While reading file '{}'".format(input_file))
-                    
+                    write_exception("While reading file '{}'".format(input_file))                
             # process questions
             uniq_questions_list = list(set([q[0] for q in all_questions_list]))
             #  get file id for all questions and create questions instances
@@ -190,8 +190,7 @@ class Parser():
                             user_id = user_details[1]
                             for qtext, response in zip(questions, user_responses):
                                 q = self.get_question_by_text(qtext)
-                                self.qresponses.append((q.id, user_id, response))
-                            
+                                self.qresponses.append((q.id, user_id, response))            
                 except:
                     write_exception("While reading file '{}'".format(input_file))
             logger.info("Respondents found: {}".format(len(self.respondents)))
