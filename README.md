@@ -9,14 +9,16 @@ Usage:
     surveyDI.py [-h] -i INPUT_DIR [-o OUTPUT_DIR]
     
     optional arguments:
-      -h, --help        Show this help message and exit
-      -i INPUT_DIR, --input_dir INPUT_DIR
-                        Directory containing input csv files
-      -o OUTPUT_DIR, --output_dir OUTPUT_DIR 
-                        Directory that will contain output files. Will be
-                        created if doesn't exist.
-      -d, --write_to_db Write information to database also.
-      -D, --only_to_db  Only write to database.
+        -h, --help            Show this help message and exit
+        -i INPUT_DIR, --input_dir INPUT_DIR
+                              Directory containing input csv files
+        -o OUTPUT_DIR, --output_dir OUTPUT_DIR
+                              Directory that will contain output files. Will be
+                              created if doesn't exist
+        -d, --write_to_db     Write information to database also.
+        -D, --only_to_db      Only write to database.
+
+
 
 
 
