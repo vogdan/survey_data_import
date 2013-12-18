@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 
+from surveyDI_conf import logger, Globals
+import surveyDI_lib
 from argparse import ArgumentParser
 from time import gmtime, strftime
 import os
-import surveyDI_lib
-from surveyDI_conf import logger, LOG_FILE_PATH, LOG_FILE
-from surveyDI_conf import OPUT_QR, OPUT_SQ, OPUT_Q, OPUT_R, OPUT_S
-from surveyDI_conf import SERVER_NAME, USER, PASS, DB_NAME
 import sys
 
 def parse_cli_opts():
@@ -38,7 +36,8 @@ def make_output_path(output_file_name):
 
 
 def main():
-    global args
+    global args, PROBLEMS
+    PROBLEMS = 0
 
     parse_cli_opts()
  
@@ -46,22 +45,27 @@ def main():
     
     if not args.only_to_db:
         # Surveys.tab
-        file_parser.write_surveys(make_output_path(OPUT_S))
+        file_parser.write_surveys(make_output_path(Globals.OPUT_S))
         # Questions.tab
-        file_parser.write_questions(make_output_path(OPUT_Q))
+        file_parser.write_questions(make_output_path(Globals.OPUT_Q))
         # SurveysQuestions.tab
-        file_parser.write_surveysquestions(make_output_path(OPUT_SQ))
+        file_parser.write_surveysquestions(make_output_path(Globals.OPUT_SQ))
         # Respondents.tab
-        file_parser.write_respondents(make_output_path(OPUT_R))
+        file_parser.write_respondents(make_output_path(Globals.OPUT_R))
         # QuestionResponses.tab
-        file_parser.write_responses(make_output_path(OPUT_QR))
+        file_parser.write_responses(make_output_path(Globals.OPUT_QR))
         # write ro MySQL
         if args.write_to_db:
-            file_parser.write_all_to_mysql(SERVER_NAME, USER, PASS, DB_NAME)
+            file_parser.write_all_to_mysql(Globals.SERVER_NAME, 
+                                           Globals.USER, 
+                                           Globals.PASS, 
+                                           Globals.DB_NAME)
     else:
         logger.info("Writing only to database.")
-        file_parser.write_all_to_mysql(SERVER_NAME, USER, PASS, DB_NAME)
-    
+        file_parser.write_all_to_mysql(Globals.SERVER_NAME, 
+                                       Globals.USER, 
+                                       Globals.PASS, 
+                                       Globals.DB_NAME)
 
 
 if __name__ == "__main__":
@@ -70,4 +74,8 @@ if __name__ == "__main__":
 
     main()
 
-    print "\nDebug log: '{}'\n".format(os.path.join(LOG_FILE_PATH, LOG_FILE))
+    if Globals.PROBLEMS:
+        print ""
+        logger.error("\tProblems detected. Check messages above and log file for details.")
+    print "\nDebug log: '{}'\n".format(os.path.join(Globals.LOG_FILE_PATH, 
+                                                    Globals.LOG_FILE))

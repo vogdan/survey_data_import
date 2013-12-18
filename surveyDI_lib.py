@@ -1,9 +1,10 @@
 import csv
-from surveyDI_conf import logger
+from surveyDI_conf import logger, Globals
 import os
 from sys import exc_info
 from traceback import format_exception
 from MySQLdb import connect
+
 
 def get_csv_files(input_dir, suffix=".csv"):
     """
@@ -43,13 +44,13 @@ def write_exception(message=None):
                      (containing vaiable values, or other useful debugging info)
     :return: None
     """    
-
     etype, value, tb = exc_info()
-    logger.error("{}: {}.\n Check log for details".format(etype, value))
+    logger.error("{}: {}.\n Check log file for details".format(etype, value))
     logger.debug(''.join(format_exception(etype, value, tb)))
     if message:
         logger.debug(message)
-
+    if not Globals.PROBLEMS:
+        Globals.PROBLEMS = 1
 
 def write_to_csv(output_file, headers, values_list, delim='\t'):
     """
@@ -110,8 +111,14 @@ def write_sql_table(cursor, db_name, table_name, headers_list, values_list):
         try:
             cursor.execute(insert_cmd)
         except Exception as e:
-            logger.error("SQL error while executing command:\n\t{}".format(insert_cmd))
-            logger.debug(e)
+            if len(db_headers) != len(row):
+                write_exception('''
+Different sizes in header ({}) and row ({}): 
+header:{}
+row:   {}'''.format(len(db_headers), len(row), db_headers, row))
+            else:
+                write_exception("SQL error while executing command:\n\t{}".format(insert_cmd))
+            return
 
 
 class InputFile():
@@ -159,7 +166,7 @@ class Parser():
         self.sqtable = "SurveysQuestions"
         #respondents
         self.respondents = []
-        self.rheader = ["SurveyID", "RespondentID", "CollectorID", "StartDate", "EndDate IP Address", "Email Address", "First Name", "LastName", "Custom Data"]
+        self.rheader = ["xxx", "SurveyID", "RespondentID", "CollectorID", "StartDate", "EndDate", "IP Address", "Email Address", "First Name", "LastName", "Custom Data"]
         self.rtable = "Respondents"
         #questionresponses
         self.qresponses = []
@@ -288,3 +295,5 @@ class Parser():
             write_sql_table(cur, db_name, self.rtable, self.rheader, self.respondents)            
             # responses
             write_sql_table(cur, db_name, self.qrtable, self.qrheader, self.qresponses)
+
+

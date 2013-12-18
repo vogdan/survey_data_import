@@ -2,18 +2,25 @@ import logging
 import sys 
 import os
 
-#output files
-OPUT_QR = "QuestionResponses.tab"
-OPUT_SQ = "SurveysQuestions.tab"
-OPUT_Q = "Questions.tab"
-OPUT_R = "Responses.tab"
-OPUT_S = "Surveys.tab"
+#put your globals into a class in a SEPARATE module to avoid circular imports
+class Globals():
+    PROBLEMS = 0
+    # output files
+    OPUT_QR = "QuestionResponses.tab"
+    OPUT_SQ = "SurveysQuestions.tab"
+    OPUT_Q = "Questions.tab"
+    OPUT_R = "Responses.tab"
+    OPUT_S = "Surveys.tab"
+    # database details
+    DB_NAME = 'testdb'
+    SERVER_NAME = 'localhost'
+    USER = 'testuser'
+    PASS = 'testx'
+    # logger
+    LOG_FILE = sys.argv[0].strip("./").split(".")[0] + ".log"
+    LOG_FILE_PATH = os.getcwd()
+    
 
-#database details
-DB_NAME = 'testdb'
-SERVER_NAME = 'localhost'
-USER = 'testuser'
-PASS = 'testx'
 
 #####################################################
 # Logging HOWTO
@@ -28,8 +35,6 @@ PASS = 'testx'
 #        log.debug(message)
 # 4. Warning (log.warning )and error (log.error) messages 
 #    will be logged to both console and log file.
-LOG_FILE = sys.argv[0].strip("./").split(".")[0] + ".log"
-LOG_FILE_PATH = os.getcwd()
 logger = logging.getLogger('webinarImport')
 logger.setLevel(logging.DEBUG)
 # log to console
@@ -39,7 +44,7 @@ ch_format = logging.Formatter('%(levelname)s: %(message)s')
 ch.setFormatter(ch_format)
 logger.addHandler(ch)
 # log to file
-fh = logging.FileHandler(LOG_FILE)
+fh = logging.FileHandler(Globals.LOG_FILE)
 fh.setLevel(logging.DEBUG)
 fh_format = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
 fh.setFormatter(fh_format)
