@@ -22,7 +22,7 @@ Also has options to write data directly to mysql tables corresponding to the out
 
 ####Output
 
-Four tab separated files:
+Five tab separated files:
 
 ```
     QuestionResponses.tab
