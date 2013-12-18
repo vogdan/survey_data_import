@@ -2,7 +2,7 @@ import logging
 import sys 
 import os
 
-#put your globals into a class in a SEPARATE module to avoid circular imports
+#put globals into a class in a SEPARATE module to avoid circular imports
 class Globals():
     PROBLEMS = 0
     # output files

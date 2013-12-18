@@ -71,9 +71,7 @@ def main():
 if __name__ == "__main__":
     log_delimiter = "#"*20 + strftime("%a, %d %b %Y %X +0000", gmtime()) + "#"*10
     logger.debug("\n"*2 + log_delimiter + "\n") 
-
     main()
-
     if Globals.PROBLEMS:
         print ""
         logger.error("\tProblems detected. Check messages above and log file for details.")

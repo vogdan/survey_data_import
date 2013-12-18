@@ -59,11 +59,8 @@ def write_to_csv(output_file, headers, values_list, delim='\t'):
     :input: desired output file name
             a list representing the csv file header
             a list of lists, each representing the corresponding values
-    :return: nothing
-    :calling example:
-    # write webinar details to csv
-            w_info = get_webinar_info(INPUT_FILE)
-            write_to_csv(OUTPUT_WEBINARS, w_info[0], [w_info[1]])
+            delimiter 
+    :return: None
     """
     try:
         logger.info("\tWriting file {}...".format(output_file))
