@@ -27,9 +27,8 @@ Five tab separated files:
 ```
     QuestionResponses.tab
     Questions.tab
-    Responses.tab
+    Respondents.tab
     SurveysQuestions.tab
-    SurveysQuestions.tab.back
     Surveys.tab
 ```
 
