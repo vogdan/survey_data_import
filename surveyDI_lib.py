@@ -163,7 +163,7 @@ class Parser():
         self.sqtable = "SurveysQuestions"
         #respondents
         self.respondents = []
-        self.rheader = ["xxx", "SurveyID", "RespondentID", "CollectorID", "StartDate", "EndDate", "IP Address", "Email Address", "First Name", "LastName", "Custom Data"]
+        self.rheader = ["SurveyID", "RespondentID", "CollectorID", "StartDate", "EndDate", "IP Address", "Email Address", "First Name", "LastName", "Custom Data"]
         self.rtable = "Respondents"
         #questionresponses
         self.qresponses = []

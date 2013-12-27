@@ -9,7 +9,7 @@ class Globals():
     OPUT_QR = "QuestionResponses.tab"
     OPUT_SQ = "SurveysQuestions.tab"
     OPUT_Q = "Questions.tab"
-    OPUT_R = "Responses.tab"
+    OPUT_R = "Respondents.tab"
     OPUT_S = "Surveys.tab"
     # database details
     DB_NAME = 'testdb'
