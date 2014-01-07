@@ -137,6 +137,7 @@ class Question():
     def __init__(self, id, text, fileid, order):
         self.id = id
         self.text = text
+        # fileid and order are two list with corresponding indexes
         self.fileid = [fileid]
         self.order = [order]
 
@@ -145,9 +146,10 @@ class Question():
 
     def add_order(self, order):
         self.order.append(order)
-    
+        
     def __str__(self):
-        return "{} {} {}".format(self.id, self.fileid, self.text)
+        return "id:{} fileid:{} order{}\ntext:{}".format(self.id, self.fileid, 
+                                                         self.order, self.text)
 
 
 class Parser():
@@ -210,12 +212,24 @@ class Parser():
             #  get file id for all questions and create questions instances
             #  for each unique question.
             total = len(all_questions_list)
+
+            print "####################################################################"
+            # find duplicate questions and mark them accordingly
+            noord = [(x, y) for (x, y, z) in all_questions_list]
+            dupls = set([(id, x[0], x[1])for id, x in enumerate(noord) if noord.count(x) > 1])
+            for (i, x, y) in dupls:
+                x = all_questions_list[i]
+                print "text:{}".format(x[0])
+                print "file:{}".format(x[1])
+                print "ordr:{}".format(x[2])
+            print "####################################################################"
+
             for id, text in enumerate(uniq_questions_list):
                 q = self.get_question_by_text(text)
                 for info in all_questions_list:
                     (qtext, qfileid, qorder) = info
                     if qtext == text:
-                        all_questions_list.remove(info)
+#                        all_questions_list.remove(info)
                         if not q:
                             q = Question(id+1, qtext, qfileid, qorder)
                             self.questions.append(q)
@@ -228,11 +242,11 @@ class Parser():
     def get_surveyquestions(self):
         self.get_questions()
         for q in self.questions:
-            for fileid in q.fileid:
-                for order in q.order:
-                    self.squestions.extend([(fileid, q.id, str(fileid)+"-"+str(order))])
+            for fileid, order in zip(q.fileid, q.order):
+                self.squestions.extend([(fileid, q.id, str(fileid)+"-"+str(order))])
            
     def get_respondents(self):
+        self.get_questions()            
         if not self.respondents:
             questions_delim = "Custom Data"
             self.get_surveys()
@@ -282,6 +296,10 @@ class Parser():
     def write_responses(self, output_file):
         self.get_respondents()
         write_to_csv(output_file, self.qrheader, self.qresponses)
+
+        for q in self.questions:
+            if len(q.fileid) > 1:
+                print q
 
     def write_all_to_mysql(self, server_name, user, passw, db_name):
         logger.info("Writing do database {}:".format(db_name))
