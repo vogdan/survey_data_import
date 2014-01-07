@@ -146,6 +146,19 @@ class Question():
 
     def add_order(self, order):
         self.order.append(order)
+
+    def is_duplicate(self):
+        """
+        Check if a question appears more than once in the same file
+    
+        :input: q - instance of the question class
+        :return: True - if question is a duplicate in the same file
+                 False - otherwise 
+        """
+        dupl = set([x for x in self.fileid if self.fileid.count(x) > 1])
+        if len(dupl) > 0:
+            return True
+        return False
         
     def __str__(self):
         return "id:{} fileid:{} order{}\ntext:{}".format(self.id, self.fileid, 
@@ -179,11 +192,7 @@ class Parser():
     def get_question_by_text(self, text):
         for q in self.questions:
             if q.text == text:
-                return q
-
-    def get_duplicate_questions(self):
-        return [q in self.questions if len(q.fileid) > 1]
-          
+                return q          
 
     def get_surveys(self):
         if not self.surveys:
@@ -216,32 +225,27 @@ class Parser():
             #  get file id for all questions and create questions instances
             #  for each unique question.
             total = len(all_questions_list)
-
-            # print "####################################################################"
-            # # find duplicate questions and mark them accordingly
-            # noord = [(x, y) for (x, y, z) in all_questions_list]
-            # dupls = set([(id, x[0], x[1])for id, x in enumerate(noord) if noord.count(x) > 1])
-            # for (i, x, y) in dupls:
-            #     x = all_questions_list[i]
-            #     print "text:{}".format(x[0])
-            #     print "file:{}".format(x[1])
-            #     print "ordr:{}".format(x[2])
-            # print "####################################################################"
-
+            # build Parser questions list
             for id, text in enumerate(uniq_questions_list):
                 q = self.get_question_by_text(text)
                 for info in all_questions_list:
                     (qtext, qfileid, qorder) = info
                     if qtext == text:
-#                        all_questions_list.remove(info)
                         if not q:
                             q = Question(id+1, qtext, qfileid, qorder)
                             self.questions.append(q)
                         else:
                             q.add_fieldid(qfileid)
                             q.add_order(qorder)
+            # display questions statistics
+            commons = [q for q in self.questions if len(q.fileid) > 1]
+            duplicates = [q for q in commons if q.is_duplicate()]
             logger.info("Distinct questions found: {} (total {})".format(
                     len(self.questions), total))
+            logger.info("Common questions to multiple input files: {}".format(
+                    len(commons) - len(duplicates)))
+            logger.info("Duplicate questions in the same input file: {}". format(
+                    len(duplicates)))
         
     def get_surveyquestions(self):
         self.get_questions()
@@ -288,7 +292,7 @@ class Parser():
         write_to_csv(output_file, 
                      self.qheader,
                      [(question.id, question.text) for question in self.questions])
-
+ 
     def write_surveysquestions(self, output_file):
         self.get_surveyquestions()
         write_to_csv(output_file, self.sqheader, self.squestions)
@@ -300,8 +304,6 @@ class Parser():
     def write_responses(self, output_file):
         self.get_respondents()
         write_to_csv(output_file, self.qrheader, self.qresponses)
-
-        print self.get_duplicate_questions()
 
     def write_all_to_mysql(self, server_name, user, passw, db_name):
         logger.info("Writing do database {}:".format(db_name))
