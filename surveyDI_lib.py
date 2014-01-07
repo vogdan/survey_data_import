@@ -134,13 +134,17 @@ class InputFile():
 
 
 class Question():
-    def __init__(self, id, text, fileid):
+    def __init__(self, id, text, fileid, order):
         self.id = id
         self.text = text
         self.fileid = [fileid]
+        self.order = [order]
 
     def add_fieldid(self, fileid):
         self.fileid.append(fileid)
+
+    def add_order(self, order):
+        self.order.append(order)
     
     def __str__(self):
         return "{} {} {}".format(self.id, self.fileid, self.text)
@@ -159,7 +163,7 @@ class Parser():
         self.qtable = "Questions"
         #surveyquestions
         self.squestions = []
-        self.sqheader = ["SurveyID", "QuestionID"]
+        self.sqheader = ["SurveyID", "QuestionID", "QuestionOrder"]
         self.sqtable = "SurveysQuestions"
         #respondents
         self.respondents = []
@@ -196,8 +200,9 @@ class Parser():
                         headers = reader.next()
                         qstart_idx = headers.index(questions_delim) + 1
                         #get questions 
-                        all_questions_list.extend([(text, fileid) 
-                                                   for text in headers[qstart_idx:]])
+                        qlist = headers[qstart_idx:]
+                        all_questions_list.extend([(text, fileid, qorder+1) 
+                                                   for qorder, text in enumerate(qlist)])
                 except IOError as e:
                     write_exception("While reading file '{}'".format(input_file))                
             # process questions
@@ -208,13 +213,15 @@ class Parser():
             for id, text in enumerate(uniq_questions_list):
                 q = self.get_question_by_text(text)
                 for info in all_questions_list:
-                    if info[0] == text:
+                    (qtext, qfileid, qorder) = info
+                    if qtext == text:
                         all_questions_list.remove(info)
                         if not q:
-                            q = Question(id+1, text, info[1])
+                            q = Question(id+1, qtext, qfileid, qorder)
                             self.questions.append(q)
                         else:
-                            q.add_fieldid(info[1])
+                            q.add_fieldid(qfileid)
+                            q.add_order(qorder)
             logger.info("Distinct questions found: {} (total {})".format(
                     len(self.questions), total))
         
@@ -222,7 +229,8 @@ class Parser():
         self.get_questions()
         for q in self.questions:
             for fileid in q.fileid:
-                self.squestions.extend([(fileid, q.id)])
+                for order in q.order:
+                    self.squestions.extend([(fileid, q.id, str(fileid)+"-"+str(order))])
            
     def get_respondents(self):
         if not self.respondents:
