@@ -181,6 +181,10 @@ class Parser():
             if q.text == text:
                 return q
 
+    def get_duplicate_questions(self):
+        return [q in self.questions if len(q.fileid) > 1]
+          
+
     def get_surveys(self):
         if not self.surveys:
             survey_list = get_csv_files(self.input_dir)
@@ -213,16 +217,16 @@ class Parser():
             #  for each unique question.
             total = len(all_questions_list)
 
-            print "####################################################################"
-            # find duplicate questions and mark them accordingly
-            noord = [(x, y) for (x, y, z) in all_questions_list]
-            dupls = set([(id, x[0], x[1])for id, x in enumerate(noord) if noord.count(x) > 1])
-            for (i, x, y) in dupls:
-                x = all_questions_list[i]
-                print "text:{}".format(x[0])
-                print "file:{}".format(x[1])
-                print "ordr:{}".format(x[2])
-            print "####################################################################"
+            # print "####################################################################"
+            # # find duplicate questions and mark them accordingly
+            # noord = [(x, y) for (x, y, z) in all_questions_list]
+            # dupls = set([(id, x[0], x[1])for id, x in enumerate(noord) if noord.count(x) > 1])
+            # for (i, x, y) in dupls:
+            #     x = all_questions_list[i]
+            #     print "text:{}".format(x[0])
+            #     print "file:{}".format(x[1])
+            #     print "ordr:{}".format(x[2])
+            # print "####################################################################"
 
             for id, text in enumerate(uniq_questions_list):
                 q = self.get_question_by_text(text)
@@ -297,9 +301,7 @@ class Parser():
         self.get_respondents()
         write_to_csv(output_file, self.qrheader, self.qresponses)
 
-        for q in self.questions:
-            if len(q.fileid) > 1:
-                print q
+        print self.get_duplicate_questions()
 
     def write_all_to_mysql(self, server_name, user, passw, db_name):
         logger.info("Writing do database {}:".format(db_name))
