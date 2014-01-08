@@ -174,6 +174,7 @@ class Parser():
         self.stable = "Surveys"
         #questions
         self.questions = []
+        self.qduplicates = [] 
         self.qheader = ["QuestionID", "QuestionText"]
         self.qtable = "Questions"
         #surveyquestions
@@ -216,7 +217,7 @@ class Parser():
                         qstart_idx = headers.index(questions_delim) + 1
                         #get questions 
                         qlist = headers[qstart_idx:]
-                        all_questions_list.extend([(text, fileid, qorder+1) 
+                        all_questions_list.extend([(text, fileid, qorder) 
                                                    for qorder, text in enumerate(qlist)])
                 except IOError as e:
                     write_exception("While reading file '{}'".format(input_file))                
@@ -239,19 +240,19 @@ class Parser():
                             q.add_order(qorder)
             # display questions statistics
             commons = [q for q in self.questions if len(q.fileid) > 1]
-            duplicates = [q for q in commons if q.is_duplicate()]
+            self.qduplicates = [q for q in commons if q.is_duplicate()]
             logger.info("Distinct questions found: {} (total {})".format(
                     len(self.questions), total))
             logger.info("Common questions to multiple input files: {}".format(
-                    len(commons) - len(duplicates)))
+                    len(commons) - len(self.qduplicates)))
             logger.info("Duplicate questions in the same input file: {}". format(
-                    len(duplicates)))
+                    len(self.qduplicates)))
         
     def get_surveyquestions(self):
         self.get_questions()
         for q in self.questions:
             for fileid, order in zip(q.fileid, q.order):
-                self.squestions.extend([(fileid, q.id, str(fileid)+"-"+str(order))])
+                self.squestions.extend([(fileid, q.id, str(fileid)+"-"+str(order+1))])
            
     def get_respondents(self):
         self.get_questions()            
@@ -266,6 +267,12 @@ class Parser():
                         headers = reader.next()
                         qstart_idx = headers.index(questions_delim) + 1
                         questions = headers[qstart_idx:]
+                        # delete duplicate questions but save their indexes
+                        dup_qs = [q for q in self.qduplicates if fileid in q.fileid]
+                        for q in dup_qs:
+                            for idx in q.order[1:]:
+                                del(questions[idx])
+                        # process responses and respondents    
                         for row in reader:
                             # process respondents
                             user_details = row[:qstart_idx]
@@ -273,6 +280,15 @@ class Parser():
                             self.respondents.append(user_details)
                             # process responses
                             user_responses = row[qstart_idx:]
+                            # handle duplicate questions responses
+                            for q in dup_qs:
+                                q_responses = [user_responses[idx] for idx in q.order]
+                                valid_responses = [r for r in q_responses if r not in q.text]
+                                # save concatenated valid responses and delete the rest
+                                user_responses[q.order[0]] = ";".join(valid_responses)
+                                for idx in q.order[1:]:
+                                    del(user_responses[idx])
+                                
                             user_id = user_details[1]
                             for qtext, response in zip(questions, user_responses):
                                 q = self.get_question_by_text(qtext)
