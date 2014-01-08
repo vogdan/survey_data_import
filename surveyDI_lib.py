@@ -137,7 +137,7 @@ class Question():
     def __init__(self, id, text, fileid, order):
         self.id = id
         self.text = text
-        # fileid and order are two list with corresponding indexes
+        # fileid and order are two lists with corresponding indexes
         self.fileid = [fileid]
         self.order = [order]
 
@@ -151,7 +151,6 @@ class Question():
         """
         Check if a question appears more than once in the same file
     
-        :input: q - instance of the question class
         :return: True - if question is a duplicate in the same file
                  False - otherwise 
         """
@@ -190,6 +189,11 @@ class Parser():
         self.qrheader = ["QuestionID", "RespondentID", "Response"]
         self.qrtable = "QuestionResponses"
 
+
+    #
+    # get information
+    #
+    
     def get_question_by_text(self, text):
         for q in self.questions:
             if q.text == text:
@@ -296,6 +300,11 @@ class Parser():
                 except:
                     write_exception("While reading file '{}'".format(input_file))
             logger.info("Respondents found: {}".format(len(self.respondents)))
+
+
+    #
+    # write information
+    #
 
     def write_surveys(self, output_file):
         self.get_surveys()
